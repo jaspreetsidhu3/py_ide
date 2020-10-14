@@ -28,6 +28,8 @@ Basic python IDE for compile and run code
 3. debug code or add features or anything you want to add
 4. Send the pull request
 
+# Contributor
+[RafDiol](https://github.com/RafDiol)
 ## Authors
 Jaspreet Singh
 
