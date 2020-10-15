@@ -18,7 +18,7 @@ Basic python IDE for compile and run code
 
 
 ## Version
-* v1.0
+* v1.1
 
 ## Want to contribution ?
 * We welcome everyone to contribute on this project
