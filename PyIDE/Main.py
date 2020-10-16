@@ -3,14 +3,18 @@ import subprocess
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import simpledialog
 import os  # For path manipulation
 from threading import *
 import time
+"""
+The class IO (Input/Output) handles all the file interaction
+"""
+
 
 """
-The class PyIDE contains the application code
+The class PyIDE contains main the application code
 """
-
 
 class PyIDE:
     def __init__(self):
@@ -38,7 +42,7 @@ class PyIDE:
         # The color scheme
         self.colorMap = {"print": "light sky blue", "def": "gold", "import": "orange", "from": "orange",
                          "for": "orange", "while": "orange", "True": "blue", "False": "red", "self": "purple",
-                         "\\n": "green2", "\\r": "green2", "class": "orange2", "None":"brown3"}
+                         "\\n": "green2", "\\r": "green2", "class": "orange2", "None": "brown3"}
         self.delay = 0.02  # If there is no delay the app will freeze
         while True:
             time.sleep(self.delay)
@@ -94,6 +98,10 @@ class PyIDE:
     # ====================================#
 
     def CreateFileSystemMenu(self):
+        # Create Project Submenu
+        self.projectMenu = Menu(self.menu, tearoff=0)
+        self.projectMenu.add_command(label="Reload", command=self.Reload)
+        self.projectMenu.add_command(label="Copy Path", command=self.CopyPath)
         # Create File menu
         self.fileMenu = Menu(self.menu, tearoff=0)
         self.fileMenu.add_command(label="Open", command=self.OpenFile, accelerator="Ctrl+O")
@@ -102,6 +110,18 @@ class PyIDE:
         self.fileMenu.add_command(label="New File", command=self.NewFile, accelerator="Ctrl+N")
         self.fileMenu.add_separator()
         self.fileMenu.add_command(label="Run", command=self.Run, accelerator="Ctrl+R")
+        self.fileMenu.add_separator()
+        self.fileMenu.add_cascade(label="Project", menu=self.projectMenu)  # This will create a sub-menu
+
+    def CreateEditMenu(self):
+        # Create the Edit Menu
+        self.editMenu = Menu(self.menu, tearoff=0)
+        self.editMenu.add_command(label="Copy", command=self.Copy, accelerator="Ctrl+C")
+        self.editMenu.add_command(label="Paste", command=self.Paste, accelerator="Ctrl+V")
+        self.editMenu.add_command(label="Delete", command=self.Delete, accelerator="Delete")
+        self.editMenu.add_command(label="Cut", command=self.Cut, accelerator="Ctrl+X")
+        self.editMenu.add_separator()
+        self.editMenu.add_command(label="Select All", command=self.SelectAll, accelerator="Ctrl+A")
 
     def CreateViewMenu(self):
         self.viewMenu = Menu(self.menu, tearoff=0)
@@ -124,12 +144,39 @@ class PyIDE:
         self.CreateViewMenu()
         # Create About Menu
         self.CreateAboutMenu()
+        # Create Edit Menu
+        self.CreateEditMenu()
         # Cascade the menus
         self.menu.add_cascade(label="File", menu=self.fileMenu)
+        self.menu.add_cascade(label="Edit", menu=self.editMenu)
         self.menu.add_cascade(label="View", menu=self.viewMenu)
         self.menu.add_cascade(label="Help", menu=self.aboutMenu)
         # Assign the menu to the window
         self.root.config(menu=self.menu)
+
+    def CopyPath(self):
+        self.codeEditor.clipboard_clear()
+        self.codeEditor.clipboard_append(self.filepath)
+
+    def Reload(self):
+        if self.filepath == "":
+            return  # break if there is no path to load
+        try:
+            # Open File and get its contents
+            self.file = open(self.filepath, encoding="utf-8")
+            # Store FilePath
+            self.filepath = self.file.name
+            self.fileContents = self.file.read()  # Get File Contents
+            # Close the file
+            self.file.close()
+            # Write Contents to Editor
+            self.codeEditor.delete(0.0, END)
+            self.codeEditor.insert(END, self.fileContents)
+            # Configure Window Title
+            self.filename = os.path.split(self.filepath)[1]  # Get Filename
+            self.__UpdateTitle()
+        except PermissionError:
+            messagebox.showerror("Oops!", "It seems like you do not have permission to modify this file")
 
     def fullScreen(self):
         if self.isFullScreen.get():
