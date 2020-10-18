@@ -3,7 +3,7 @@ import subprocess
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
-import os  # For path manipulation
+import os
 from threading import *
 import time
 
@@ -19,7 +19,7 @@ class PyIDE:
         # Declare some variables
         self.filepath = ""
         self.filename = "Untitled"
-        self.filetypes = (["Python File", "*.py"], ["Python Compiled Bytecode", "*.pyc"])
+        self.filetypes = (["Python File", "*.py"], ["All Files", "*.*"])
         # Creates the GUI
         self.CreateWindow()
         # Make the window start in the size of the screen
@@ -34,11 +34,12 @@ class PyIDE:
         # Display the GUI
         self.root.mainloop()
 
+    # This method is executed by a thread
     def SyntaxHighlighting(self):
         # The color scheme
         self.colorMap = {"print": "light sky blue", "def": "gold", "import": "orange", "from": "orange",
                          "for": "orange", "while": "orange", "True": "blue", "False": "red", "self": "purple",
-                         "\\n": "green2", "\\r": "green2", "class": "orange2", "None":"brown3"}
+                         "\\n": "green2", "\\r": "green2", "class": "orange2", "None": "brown3"}
         self.delay = 0.02  # If there is no delay the app will freeze
         while True:
             time.sleep(self.delay)
@@ -71,7 +72,7 @@ class PyIDE:
         finally:
             self.popup.grab_release()
 
-    # ====================================#
+    # ==================================== #
     # Basic Commands
     def Copy(self):
         selected = self.codeEditor.get(SEL_FIRST, SEL_LAST)
@@ -91,9 +92,15 @@ class PyIDE:
     def SelectAll(self):
         self.codeEditor.tag_add(SEL, "1.0", END)
 
-    # ====================================#
+    # ==================================== #
 
     def CreateFileSystemMenu(self):
+        # Create Project Submenu
+        self.projectMenu = Menu(self.menu, tearoff=0)
+        self.projectMenu.add_command(label="Reload", command=self.Reload)
+        self.projectMenu.add_command(label="Copy Path", command=self.CopyPath)
+        self.projectMenu.add_command(label="Open in Explorer", command=self.OpenInExplorer)
+        self.projectMenu.add_command(label="Open Console", command=self.OpenConsole)
         # Create File menu
         self.fileMenu = Menu(self.menu, tearoff=0)
         self.fileMenu.add_command(label="Open", command=self.OpenFile, accelerator="Ctrl+O")
@@ -102,6 +109,20 @@ class PyIDE:
         self.fileMenu.add_command(label="New File", command=self.NewFile, accelerator="Ctrl+N")
         self.fileMenu.add_separator()
         self.fileMenu.add_command(label="Run", command=self.Run, accelerator="Ctrl+R")
+        self.fileMenu.add_separator()
+        self.fileMenu.add_cascade(label="Project", menu=self.projectMenu)  # This will create a sub-menu
+        self.fileMenu.add_separator()
+        self.fileMenu.add_command(label="Exit", command=self.Exit)
+
+    def CreateEditMenu(self):
+        # Create the Edit Menu
+        self.editMenu = Menu(self.menu, tearoff=0)
+        self.editMenu.add_command(label="Copy", command=self.Copy, accelerator="Ctrl+C")
+        self.editMenu.add_command(label="Paste", command=self.Paste, accelerator="Ctrl+V")
+        self.editMenu.add_command(label="Delete", command=self.Delete, accelerator="Delete")
+        self.editMenu.add_command(label="Cut", command=self.Cut, accelerator="Ctrl+X")
+        self.editMenu.add_separator()
+        self.editMenu.add_command(label="Select All", command=self.SelectAll, accelerator="Ctrl+A")
 
     def CreateViewMenu(self):
         self.viewMenu = Menu(self.menu, tearoff=0)
@@ -124,12 +145,39 @@ class PyIDE:
         self.CreateViewMenu()
         # Create About Menu
         self.CreateAboutMenu()
+        # Create Edit Menu
+        self.CreateEditMenu()
         # Cascade the menus
         self.menu.add_cascade(label="File", menu=self.fileMenu)
+        self.menu.add_cascade(label="Edit", menu=self.editMenu)
         self.menu.add_cascade(label="View", menu=self.viewMenu)
         self.menu.add_cascade(label="Help", menu=self.aboutMenu)
         # Assign the menu to the window
         self.root.config(menu=self.menu)
+
+    def CopyPath(self):
+        self.codeEditor.clipboard_clear()
+        self.codeEditor.clipboard_append(self.filepath)
+
+    def Reload(self):
+        if self.filepath == "":
+            return  # break if there is no path to load
+        try:
+            # Open File and get its contents
+            self.file = open(self.filepath, encoding="utf-8")
+            # Store FilePath
+            self.filepath = self.file.name
+            self.fileContents = self.file.read()  # Get File Contents
+            # Close the file
+            self.file.close()
+            # Write Contents to Editor
+            self.codeEditor.delete(0.0, END)
+            self.codeEditor.insert(END, self.fileContents)
+            # Configure Window Title
+            self.filename = os.path.split(self.filepath)[1]  # Get Filename
+            self.__UpdateTitle()
+        except PermissionError:
+            messagebox.showerror("Oops!", "It seems like you do not have permission to modify this file")
 
     def fullScreen(self):
         if self.isFullScreen.get():
@@ -160,6 +208,7 @@ class PyIDE:
         self.scroll.config(command=self.output.yview)
         self.scroll.pack(side=RIGHT, fill=Y, ipady=140)
         self.output.pack(fill=X, side=BOTTOM)
+        self.scroll.config(command=self.codeEditor.yview)
 
     def AboutUs(self):
         messagebox.showinfo("About",
@@ -246,8 +295,21 @@ class PyIDE:
             pass
         except PermissionError:
             messagebox.showerror("Oops!", "It seems like you do not have permission to modify this file")
-        except Exception:
-            messagebox.showerror("Oops!", "It seems like something went wrong while trying to save this file")
+        except Exception as e:
+            messagebox.showerror("Oops!", f"It seems like something went wrong while trying to save this file | {e}")
+
+    def OpenInExplorer(self):
+        # The file explorer needs a filepath with backslashes
+        self.newfilepath = self.filepath.replace("/", "\\")
+        # Run the command
+        subprocess.Popen(rf'explorer /select, "{self.newfilepath}"')
+
+    def Exit(self):
+        self.root.destroy()
+
+    def OpenConsole(self):
+        self.newfilepath = self.filepath.replace("/", "\\")
+        os.system(rf"start cmd /K cd {self.newfilepath}")
 
 
 if __name__ == "__main__":
