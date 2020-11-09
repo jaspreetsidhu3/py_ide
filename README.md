@@ -1,8 +1,6 @@
-# Basic-Py_IDE
-
-<img src="img/pyidelogo.ico" width=100 height=100 />
-Basic python IDE for compile and run code
-
+<div align="center">
+  <img src="img/pyide.png" width="100%" />
+  </div>
 
 ## Getting Started
 
@@ -28,7 +26,7 @@ Basic python IDE for compile and run code
 3. debug code or add features or anything you want to add
 4. Send the pull request
 
-# Contributor
+## Contributors
 [RafDiol](https://github.com/RafDiol)
 ## Authors
 Jaspreet Singh
