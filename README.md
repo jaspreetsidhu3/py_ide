@@ -9,14 +9,8 @@
 3. Start using it and Enjoy.
 
 
-## Screenshots
-
-* Overview
-<img align="center" src="img/Screenshot (27).png" width=800 height=500 />
-
-
 ## Version
-* v1.1
+* v1.2
 
 ## Want to contribution ?
 * We welcome everyone to contribute on this project
