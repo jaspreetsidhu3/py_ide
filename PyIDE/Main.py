@@ -191,7 +191,10 @@ class PyIDE:
         self.codeEditor = Text(self.root, undo=1, tabs=1, yscrollcommand=self.scroll.set, font=35)
         self.frame = Frame(self.root, bg="grey")
         self.__UpdateTitle()
-        self.root.iconbitmap('pyidelogo.ico')
+        try:
+            self.root.iconbitmap('pyidelogo.ico')
+        except:
+            pass
         # Configure the menus
         self.ConfigureMenus()
         # Package all the controls / components
